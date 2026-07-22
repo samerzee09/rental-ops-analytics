@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Property Rental Operations Dashboard | Samer Zeeshan</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --card: #21253a;
+    --accent: #4f9cf9; --accent2: #7c6af9; --green: #22c55e;
+    --yellow: #f59e0b; --red: #ef4444; --text: #e2e8f0;
+          --muted: #8892a4; --border: #2d3352;
+}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar h1 { font-size: 1rem; font-weight: 600; letter-spacing: .03em; }
+  .topbar h1 span { color: var(--accent); }
+  .badge { background: var(--accent); color: #fff; border-radius: 4px; padding: 2px 8px; font-size: .7rem; font-weight: 700; margin-left: 10px; }
+    .author { font-size: .75rem; color: var(--muted); }
+  .filters { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 28px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .filters label { font-size: .72rem; color: var(--muted); }
+  .filters select { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 5px 10px; font-size: .8rem; cursor: pointer; }
+  .main { padding: 24px 28px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; position: relative; overflow: hidden; }
+  .kpi::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--accent); }
+      .kpi.green::before { background: var(--green); }
+  .kpi.yellow::before { background: var(--yellow); }
+  .kpi.red::before { background: var(--red); }
+  .kpi.purple::before { background: var(--accent2); }
+  .kpi-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .kpi-value { font-size: 1.7rem; font-weight: 700; line-height: 1; }
+  .kpi-sub { font-size: .72rem; color: var(--muted); margin-top: 5px; }
+  .kpi-delta { display: inline-block; font-size: .72rem; padding: 2px 7px; border-radius: 4px; margin-top: 6px; font-weight: 600; }
+  .kpi-delta.up { background: rgba(34,197,94,.15); color: var(--green); }
+  .kpi-delta.down { background: rgba(239,68,68,.15); color: var(--red); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-full { margin-bottom: 16px; }
+  @media(max-width:900px) { .grid-2,.grid-3 { grid-template-columns: 1fr; } }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .chart-title { font-size: .8rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .chart-sub { font-size: .7rem; color: var(--muted); margin-bottom: 16px; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+  .data-table th { background: var(--surface); color: var(--muted); text-transform: uppercase; font-size: .65rem; letter-spacing: .06em; padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .data-table tr:hover td { background: rgba(79,156,249,.05); }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: .67rem; font-weight: 600; }
+  .pill.high { background: rgba(34,197,94,.15); color: var(--green); }
+  .pill.med { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .pill.low { background: rgba(239,68,68,.15); color: var(--red); }
+</style>
+  </head>
+  <body>
+  <div class="topbar">
+    <div><h1>Property Rental Operations Dashboard <span>| Portfolio Analytics</span><span class="badge">LIVE</span></h1></div>
+    <div class="author">Samer Zeeshan &nbsp;·&nbsp; Data Analyst &nbsp;·&nbsp; github.com/samerzee09</div>
+  </div>
+  <div class="filters">
+    <label>PROPERTY TYPE</label>
+    <select><option>All Types</option><option>Apartment</option><option>Condo</option><option>Single-Family</option><option>Townhouse</option></select>
+    <label>YEAR</label>
+    <select><option>2024</option><option>2023</option><option>All Years</option></select>
+    <label>QUARTER</label>
+    <select><option>All Quarters</option><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select>
+  </div>
+  <div class="main">
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="kpi-label">Portfolio Occupancy</div><div class="kpi-value">91.4%</div><div class="kpi-sub">vs. 87.2% prior year</div><span class="kpi-delta up">+4.2 pts YoY</span></div>
+    <div class="kpi"><div class="kpi-label">Gross Revenue (YTD)</div><div class="kpi-value">$1.24M</div><div class="kpi-sub">Across 8 properties</div><span class="kpi-delta up">+11.3% YoY</span></div>
+      <div class="kpi purple"><div class="kpi-label">Net Operating Income</div><div class="kpi-value">$892K</div><div class="kpi-sub">NOI Margin: 71.9%</div><span class="kpi-delta up">+8.7% YoY</span></div>
+    <div class="kpi yellow"><div class="kpi-label">Delinquency Rate</div><div class="kpi-value">6.8%</div><div class="kpi-sub">Late + Unpaid</div><span class="kpi-delta down">-1.4 pts vs Q3</span></div>
+      <div class="kpi red"><div class="kpi-label">Maintenance Spend</div><div class="kpi-value">$87.4K</div><div class="kpi-sub">YTD all properties</div><span class="kpi-delta down">+14% YoY</span></div>
+      <div class="kpi green"><div class="kpi-label">Avg Vacancy Duration</div><div class="kpi-value">18 days</div><div class="kpi-sub">Between turnovers</div><span class="kpi-delta up">-6 days YoY</span></div>
+    </div>
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-title">Monthly Revenue vs. Expenses</div>
+        <div class="chart-sub">Gross rent collected vs. operating costs — Jan-Dec 2024</div>
+        <canvas id="revenueChart" height="220"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Occupancy Rate by Quarter</div>
+        <div class="chart-sub">Portfolio-wide occupancy trend with 90% target line</div>
+        <canvas id="occupancyChart" height="220"></canvas>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="chart-card">
+        <div class="chart-title">NOI by Property</div>
+        <div class="chart-sub">Net Operating Income ranked by profitability</div>
+        <canvas id="noiChart" height="240"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Payment Status Breakdown</div>
+      <div class="chart-sub">Current period — all tenants</div>
+      <canvas id="paymentDonut" height="240"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Maintenance by Category</div>
+      <div class="chart-sub">YTD spend by work type</div>
+        <canvas id="maintChart" height="240"></canvas>
+      </div>
+    </div>
+    <div class="chart-card grid-full">
+      <div class="chart-title">Property Performance Summary — SQL Q6: Revenue Per Unit Window Ranking</div>
+      <div class="chart-sub">Ranked by revenue efficiency (revenue per unit)</div>
+    <br>
+    <table class="data-table">
+      <thead><tr><th>#</th><th>Property</th><th>City</th><th>Type</th><th>Units</th><th>Occupancy</th><th>Gross Revenue</th><th>NOI</th><th>Rev/Unit</th><th>Margin</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Oak Park Singles</td><td>Oak Park, IL</td><td>Single-Family</td><td>6</td><td><span class="pill high">100%</span></td><td>$108,000</td><td>$86,600</td><td>$18,000</td><td><span class="pill high">80.2%</span></td></tr>
+        <tr><td>2</td><td>Riverside Townhomes</td><td>Evanston, IL</td><td>Townhouse</td><td>8</td><td><span class="pill high">100%</span></td><td>$134,400</td><td>$104,600</td><td>$16,800</td><td><span class="pill high">77.8%</span></td></tr>
+          <tr><td>3</td><td>Maple Grove Condos</td><td>Naperville, IL</td><td>Condo</td><td>12</td><td><span class="pill high">92%</span></td><td>$158,400</td><td>$122,300</td><td>$13,200</td><td><span class="pill high">77.2%</span></td></tr>
+        <tr><td>4</td><td>Lakewood Arms</td><td>Chicago, IL</td><td>Apartment</td><td>24</td><td><span class="pill high">96%</span></td><td>$213,600</td><td>$163,400</td><td>$8,900</td><td><span class="pill high">76.5%</span></td></tr>
+              <tr><td>5</td><td>Lincoln Park Lofts</td><td>Chicago, IL</td><td>Apartment</td><td>16</td><td><span class="pill med">81%</span></td><td>$115,200</td><td>$79,400</td><td>$7,200</td><td><span class="pill med">68.9%</span></td></tr>
+        <tr><td>6</td><td>Elmwood Apartments</td><td>Aurora, IL</td><td>Apartment</td><td>18</td><td><span class="pill med">83%</span></td><td>$127,800</td><td>$93,500</td><td>$7,100</td><td><span class="pill med">73.2%</span></td></tr>
+              <tr><td>7</td><td>Westfield Commons</td><td>Joliet, IL</td><td>Apartment</td><td>20</td><td><span class="pill med">85%</span></td><td>$122,400</td><td>$84,500</td><td>$6,120</td><td><span class="pill med">69.0%</span></td></tr>
+              <tr><td>8</td><td>Prairie View Condos</td><td>Schaumburg, IL</td><td>Condo</td><td>10</td><td><span class="pill low">70%</span></td><td>$100,800</td><td>$57,900</td><td>$10,080</td><td><span class="pill low">57.4%</span></td></tr>
+      </tbody>
+    </table>
+        </div>
+      </div>
+      <script>
+      Chart.defaults.color='#8892a4';Chart.defaults.borderColor='#2d3352';Chart.defaults.font.family="'Segoe UI',system-ui,sans-serif";
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+new Chart(document.getElementById('revenueChart'),{type:'bar',data:{labels:months,datasets:[{label:'Gross Revenue',data:[94200,91800,98400,102600,105200,108400,110300,109800,107500,103200,99600,109600],backgroundColor:'rgba(79,156,249,.7)',borderRadius:4,order:2},{label:'Total Expenses',data:[26800,24100,28300,29200,31500,28900,32100,30800,29400,27600,26100,29200],backgroundColor:'rgba(124,106,249,.7)',borderRadius:4,order:2},{label:'NOI',data:[67400,67700,70100,73400,73700,79500,78200,79000,78100,75600,73500,80400],type:'line',borderColor:'#22c55e',backgroundColor:'transparent',pointRadius:3,tension:0.4,order:1}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12}}},scales:{x:{grid:{color:'#2d3352'}},y:{grid:{color:'#2d3352'},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'k'}}}}});
+new Chart(document.getElementById('occupancyChart'),{type:'line',data:{labels:['Q1 23','Q2 23','Q3 23','Q4 23','Q1 24','Q2 24','Q3 24','Q4 24'],datasets:[{label:'Portfolio Occupancy %',data:[85.1,87.3,88.9,86.2,88.4,91.2,92.6,91.4],borderColor:'#4f9cf9',backgroundColor:'rgba(79,156,249,.1)',fill:true,tension:0.4,pointRadius:5},{label:'90% Target',data:[90,90,90,90,90,90,90,90],borderColor:'#f59e0b',borderDash:[6,4],pointRadius:0}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12}}},scales:{x:{grid:{color:'#2d3352'}},y:{min:75,max:100,grid:{color:'#2d3352'},ticks:{callback:v=>v+'%'}}}}});
+new Chart(document.getElementById('noiChart'),{type:'bar',data:{labels:['Lakewood Arms','Maple Grove','Riverside TH','Westfield','Elmwood','Oak Park','Lincoln Park','Prairie View'],datasets:[{label:'NOI',data:[163400,122300,104600,84500,93500,86600,79400,57900],backgroundColor:['#4f9cf9','#4f9cf9','#4f9cf9','#7c6af9','#7c6af9','#7c6af9','#f59e0b','#ef4444'],borderRadius:6}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2d3352'},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'k'}},y:{grid:{color:'#2d3352'}}}}});
+new Chart(document.getElementById('paymentDonut'),{type:'doughnut',data:{labels:['Paid On-Time','Paid Late','Partial','Unpaid'],datasets:[{data:[81,7,5,7],backgroundColor:['#22c55e','#f59e0b','#4f9cf9','#ef4444'],borderWidth:0,hoverOffset:6}]},options:{responsive:true,cutout:'70%',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:14}}}}});
+new Chart(document.getElementById('maintChart'),{type:'bar',data:{labels:['HVAC','Plumbing','Electrical','Appliance','Structural','Landscaping','Other'],datasets:[{label:'Cost',data:[28400,19800,14200,10600,7400,4800,2200],backgroundColor:'rgba(239,68,68,.75)',borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2d3352'},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'k'}},y:{grid:{display:false}}}}});
+</script>
+</body>
+</html>
